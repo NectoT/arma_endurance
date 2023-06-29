@@ -1,0 +1,131 @@
+class Params {
+	class set
+	{
+		title = "Loadout Set";
+		texts[] = { "Vanilla", "CUP"};
+		values[] = { 1, 2 };
+		default = 2;
+	};
+	class difficulty
+	{
+		title = "Difficulty";
+		texts[] = { "Normal", "Harder" };
+		values[] = { 1, 1.5 };
+		default = 1;
+	};
+	class waiting_time
+	{
+		title = "Drone waiting time";
+		texts[] = { "10 minutes", "15 minutes", "20 minutes", "30 minutes" };
+		values[] = { 5, 10, 15, 20, 30 };
+		default = 10;
+	};
+	class friendly_squads_amount
+	{
+		title = "Amount of friendly squads";
+		texts[] = { "0", "1", "2", "3", "4" };
+		values[] = { 0, 1, 2, 3, 4 };
+		default = 3;
+	};
+	class time
+	{
+		title = "Starting time";
+		texts[] = { "Random", "6am", "12pm", "18pm", "2am" };
+		values[] = { -1, 6, 12, 18, 24 };
+		default = 12;
+	};
+	class fog
+	{
+		title = "Fog";
+		texts[] = { "Disabled", "Enabled"};
+		values[] = { 0, 1 };
+		default = 0;
+	};
+};
+
+class CfgSounds {
+    sounds[] = {};
+
+    class radio_in
+	{
+	name = "in2a";
+	sound[] = {"@A3\Dubbing_Radio_F\sfx\in2a.ogg",db+12,1.1};
+	titles[] = {};
+	};
+
+    class radio_out
+	{
+	name = "out2a";
+	sound[] = {"@A3\Dubbing_Radio_F\sfx\out2a.ogg",db+12,1};
+	titles[] = {};
+	};
+};
+
+class Header
+{
+	gameType =  Coop;	// Game type
+	minPlayers =  1;	// minimum number of players the mission supports
+	maxPlayers = 10;	// maximum number of players the mission supports
+};
+loadScreen = "A3\map_Stratis\data\pictureMap_ca.paa"; // eh, I'll find a better pic later
+// briefingName = "Endurance";
+onLoadName = "Endurance";
+onLoadMission = "Hold and get out";
+
+reviveMode = 1;
+reviveUnconsciousStateMode = 0;
+reviveRequiredItems = 2;
+reviveBleedOutDelay = 30000000;
+
+enableDebugConsole = 1;
+
+aiKills = 1;
+
+
+class CfgFunctions
+{
+	class END
+	{
+		class Base
+		{
+			file = "";
+
+			class setPlacements {
+				file = "placements.sqf";
+			};
+			class setGlobalVars {
+				file = "variables.sqf";
+			};
+			class setBriefing {
+				file = "briefing.sqf";
+			};
+			class setTimeWeather {
+				file = "timeWeather.sqf";
+			};
+		};
+
+		class Functions
+		{
+			file = "funcs"
+
+			class addGroupToOverwatch {};
+			class addGroupToDefense {};
+			class setUnitsValue {};
+			class setEnemyGroupType {};
+			class attack {};
+			class deleteNearbySpottedPositions {};
+			class spawnSquad {};
+
+			class isSafeEnemySpawn {};
+			class findEnemySpawnPos {};
+			class findEnemyVehicleSpawnPos {};
+			class findEnemyHeliSpawnPos {};
+
+			class spawnEnemyParatroopers {};
+			class artilleryFire {};
+
+			class createRadioItem {};
+			class createIntel {};
+		};
+	};
+};
