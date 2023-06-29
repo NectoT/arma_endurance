@@ -1,14 +1,15 @@
 // Adds them to the list of squads to save, also makes the group use chat when in contact with enemy
 params ["_group"];
-_group addEventHandler ["CombatModeChanged", {
-	params ["_group", "_newMode"];
+_group addEventHandler ["KnowsAboutChanged", {
+	params ["_group", "_targetUnit", "_newKnowsAbout", "_oldKnowsAbout"];
 
-	_leader = leader _group;
+	if (_group getVariable "enemy_contact") exitWith {};
 
-	if (!(_newMode isEqualTo "YELLOW") && !(_newMode isEqualTo "RED")) exitWith {};
+	if (side _targetUnit != east || (vehicle _targetUnit != _targetUnit)) exitWith {};
 
-	[_leader] spawn {
-		params ["_leader"];
+	[_group] spawn {
+		params ["_group"];
+		_leader = leader _group;
 		sleep 3; // fumbling around
 		if (!(alive _leader)) exitWith {};
 
@@ -16,6 +17,11 @@ _group addEventHandler ["CombatModeChanged", {
 		_string = format ["Enemy contact at %1, %2", _grid select 0, _grid select 1];
 		["radio_in"] remoteExec ["playSound", -12];
 		[_leader, _string] remoteExec ["sideChat", -12];
+
+		_group setVariable ["enemy_contact", true];
+
+		// Doesn't work for some reason
+		// (_group) removeAllEventHandlers "KnowsAboutChanged";
 	}
 }];
 
