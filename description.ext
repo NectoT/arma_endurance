@@ -72,12 +72,14 @@ class Header
 {
 	gameType =  Coop;	// Game type
 	minPlayers =  1;	// minimum number of players the mission supports
-	maxPlayers = 10;	// maximum number of players the mission supports
+	maxPlayers = 8;	// maximum number of players the mission supports
 };
-loadScreen = "A3\map_Stratis\data\pictureMap_ca.paa"; // eh, I'll find a better pic later
+loadScreen = "pictures\loadscreen.paa";
 // briefingName = "Endurance";
 onLoadName = "Endurance";
 onLoadMission = "Hold and get out";
+overviewPicture = "pictures\loadscreen.paa";
+overviewText = "OPFOR has been pushing BLUFOR from the area for several days, and the HQ has decided to evacuate all the remaining BLUFOR forces. You and several other squads were cut off during the retreat, and so must hold off the enemy until you find a way out.";
 
 reviveMode = 1;
 reviveUnconsciousStateMode = 0;
