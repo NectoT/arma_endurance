@@ -12,6 +12,8 @@ FriendlyGroupClasses = [
 EnemyAAClass = "O_APC_Tracked_02_AA_F";
 EnemyMortarClass = "O_Mortar_01_F";
 EnemyPlaneClass = "CUP_O_SU34_CSAT";
+EnemyPlaneWeapon = "";
+EnemyPlaneMode = "";
 EnemyReconHeliClass = "O_Heli_Light_02_unarmed_F";
 EnemyChuteHeliClass = "O_Heli_Transport_04_covered_F";
 
@@ -53,7 +55,7 @@ HeavySquads = [
 		"O_Sharpshooter_F",
 		"O_Soldier_LAT_F",
 		"O_medic_F"
-	],
+	]
 ];
 LightSquads = [
 	[
@@ -85,7 +87,7 @@ LightSquads = [
 		"O_recon_LAT_F",
 		"O_recon_JTAC_F",
 		"O_recon_exp_F"
-	],
+	]
 ];
 
 CivCars = [

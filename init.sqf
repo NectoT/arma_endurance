@@ -79,7 +79,6 @@ for "VARNAME" from 1 to _cars_to_spawn do {
 	_pos resize 2;
 	_veh = createVehicle [selectRandom CivCars, _pos, [], 0];
 	_veh setDir (random 360);
-	createVehicleCrew _veh;
 };
 
 
@@ -180,8 +179,6 @@ _squad_names = ["Bravo 1-1", "Bravo 1-2", "Charlie 1-1", "Charlie 1-2"];
 	// wait until players get the toolkit and then get the drone out
 	waitUntil { sleep 1; _drone distance _helipad < 5 };
 
-	_drone allowDamage true;
-
 	["task_wait", "SUCCEEDED"] remoteExec ["BIS_fnc_taskSetState", -12];
 	[
 		west,
@@ -272,13 +269,16 @@ _squad_names = ["Bravo 1-1", "Bravo 1-2", "Charlie 1-1", "Charlie 1-2"];
 				};
 				_taskname = "task_help_" + (groupId _group);
 				_heli_group = group (crew EscapeHeli select 0);
+
+				// tell that the group is empty cause it joined players
+				_group setVariable ["_with_players", true];
 				_units = units _group;
 				_units join (group EscapeHeli);
 
-				// tell that the group was deleted cause it joined players
-				_group setVariable ["_with_players", true];
-
+				sleep 0.1;
 				deleteGroup _group;
+				[_taskname,EvacPos] remoteExec ["BIS_fnc_taskSetDestination", -12];
+
 
 				waitUntil {
 					sleep 1;
@@ -495,7 +495,7 @@ if ([position EscapeHeli] call END_fnc_isSafeEnemySpawn) then {
 
 
 			// mortar fire
-			if ((random 99) < (Threat - 1) && EnemyPoints > 3 && MortarAvailable) then {
+			if ((random 70) < (50 min (Threat - 1)) && EnemyPoints > 3 && MortarAvailable) then {
 				_targets = [];
 				{
 					_targets append (_x targets [true, 200]);
