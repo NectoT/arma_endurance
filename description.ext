@@ -76,7 +76,7 @@ class Header
 };
 loadScreen = "pictures\loadscreen.paa";
 // briefingName = "Endurance";
-onLoadName = "Endurance";
+onLoadName = "[CO8] Endurance";
 onLoadMission = "Hold and get out";
 overviewPicture = "pictures\loadscreen.paa";
 overviewText = "OPFOR has been pushing BLUFOR from the area for several days, and the HQ has decided to evacuate all the remaining BLUFOR forces. You and several other squads were cut off during the retreat, and so must hold off the enemy until you find a way out.";
