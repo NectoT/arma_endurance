@@ -27,6 +27,13 @@ class Params {
 		values[] = { 0, 1, 2, 3, 4 };
 		default = 3;
 	};
+	class near_car
+	{
+		title = "Spawn car near players";
+		texts[] = { "No", "Yes" };
+		values[] = { 0, 1 };
+		default = 0;
+	};
 	class time
 	{
 		title = "Starting time";

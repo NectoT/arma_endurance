@@ -118,3 +118,11 @@ LightSquads = [
 	]
 
 ];
+
+CivCars = [
+	"CUP_C_Golf4_random_Civ",
+	"CUP_C_Octavia_CIV",
+	"C_SUV_01_F",
+	"C_Van_01_transport_F",
+	"C_Truck_02_transport_F"
+]

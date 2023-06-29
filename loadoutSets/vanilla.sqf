@@ -87,3 +87,11 @@ LightSquads = [
 		"O_recon_exp_F"
 	],
 ];
+
+CivCars = [
+	"C_Hatchback_01_F",
+	"C_Offroad_01_F",
+	"C_SUV_01_F",
+	"C_Van_01_transport_F",
+	"C_Truck_02_transport_F"
+]

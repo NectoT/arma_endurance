@@ -40,9 +40,9 @@ EscapeHeli setHit ["motor", 1];
 
 
 // spawning players
-_pos = [[StartingLocation]] call BIS_fnc_randomPos;
+_player_pos = [[StartingLocation]] call BIS_fnc_randomPos;
 {
-	_x setVehiclePosition [_pos, [], 15, "NONE"];
+	_x setVehiclePosition [_player_pos, [], 15, "NONE"];
 	_x setUnitTrait ["engineer", true]; // everyone can repair the heli
 } forEach (units west);
 
@@ -63,6 +63,24 @@ if (DifficultyParam > 1) then {
 		_x addPrimaryWeaponItem "acc_flashlight";
 	};
 } forEach (units west);
+
+
+// spawn some empty cars
+_cars_to_spawn = 3;
+if ((["near_car", 1] call BIS_fnc_getParamValue) == 1) then {
+	_pos = [[[_player_pos, 20]]] call BIS_fnc_randomPos;
+	_pos resize 2;
+	if (_pos isEqualTo [0,0]) exitWith {};
+	_veh = createVehicle [selectRandom CivCars, _pos, [], 0];
+	_veh setDir (random 360);
+};
+for "VARNAME" from 1 to _cars_to_spawn do {
+	_pos = [[[SpawnLocation, 300]], [], {isOnRoad _this }] call BIS_fnc_randomPos;
+	_pos resize 2;
+	_veh = createVehicle [selectRandom CivCars, _pos, [], 0];
+	_veh setDir (random 360);
+	createVehicleCrew _veh;
+};
 
 
 // spawning friendly squads
