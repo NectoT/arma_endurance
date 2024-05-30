@@ -7,7 +7,7 @@ params ["_units", "_value"];
 		Threat = Threat + (_unit getVariable "_value");
 
 		// I know it's strange to add item drop to a function dedicated to setting unit value
-		if (!RadioFound && random 1 < 0.1) then {
+		if (!RadioFound) then {
 			[position _unit] call END_fnc_createRadioItem;
 		};
 		if ((count UnknownAAPositions > 0 || !MortarFound) && random 1 < 0.2) then {
