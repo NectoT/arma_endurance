@@ -462,142 +462,193 @@ if ([position EscapeHeli] call END_fnc_isSafeEnemySpawn) then {
 	[units _group, 1] call END_fnc_setUnitsValue;
 };
 
-
 // enemy commander ai
 [] spawn {
-	sleep 15;
+	_baseIdleTime = 2;
+
+	// How much time passed since last iteration. Usually equals to _baseIdleTime. Needs to be
+	// set manually
+	_deltaTime = 30; 
+
 	while {true} do {
-		EnemyPoints = EnemyPoints + (ln Threat) / (ln 2);
+		EnemyPoints = EnemyPoints + (ln Threat) / (ln 2) / 60 * _deltaTime;
+		_deltaTime = 0;
 
 		if (!FoundByEnemy) then {
 			if (ActiveLightSquads < 4) then {
+				if (Debug) then {
+					hint('Spawned initial enemy squad');
+				};
+
 				_pos = [EnemySpawn] call END_fnc_findEnemySpawnPos;
 				_group = [_pos, selectRandom LightSquads, east] call END_fnc_spawnSquad;
 				[_group] call END_fnc_addGroupToOverwatch;
 				[_group, "light"] call END_fnc_setEnemyGroupType;
-				[_group, position (EscapeHeli)] call END_fnc_attack;
+				if (ActiveLightSquads == 0) then {
+					[_group, position (EscapeHeli)] call END_fnc_attack;
+				} else { 
+					[_group, selectRandom ([position EscapeHeli] + FriendlyLocations)] call END_fnc_attack;
+				};
+				
 				[units _group, 1] call END_fnc_setUnitsValue;
 			};
 
-			sleep 90;
+			_delta_time = 90;
+			sleep _delta_time;
+			continue;
+		};
+
+		// I dunno how that can happen, if enemy found players they also add a spotted position,
+		// and after clearing it they add Escape Heli as spotted position in END_fnc_attack,
+		// but it happened to me once
+		if (count SpottedPositions == 0) then {
+			SpottedPositions pushBack (position EscapeHeli);
+		};
+
+
+		// mortar fire
+		if ((random 70) < (50 min (Threat - 1)) && EnemyPoints > 3 && MortarAvailable) then {
+			_targets = [];
+			{
+				_targets append (_x targets [true, 200]);
+			} forEach (units east);
+			_targets = _targets select { _x distance2D (position (leader MortarGroup)) < 1000 };
+			if (count _targets > 0) then {
+				_fire_pos = position (selectRandom _targets);
+				[MortarGroup, _fire_pos, 5] call END_fnc_artilleryFire;
+
+				_grid = _fire_pos call BIS_fnc_PosToGrid;
+				_text = format [
+					"Incoming shells at %1, %2", _grid select 0, _grid select 1
+				];
+				[leader MortarGroup, _text] call END_fnc_enemyChat;
+			};
+
+			EnemyPoints = EnemyPoints - 3;
+
+			_deltaTime = _baseIdleTime;
+			sleep _baseIdleTime;
+			continue;
+		};
+
+		// paratroopers
+		if (random 1 > 0.8 && TransportHeliAvailable && EnemyPoints > 5 && count SpottedPositions > 0) then {
+			_destination = selectRandom SpottedPositions;
+			_start = [EnemySpawn] call END_fnc_findEnemyHeliSpawnPos;
+			_group = [
+				EnemyChuteHeliClass,
+				EnemyParatroopers,
+				_start,
+				_destination
+			] call END_fnc_spawnEnemyParatroopers;
+			[units _group, 1] call END_fnc_setUnitsValue;
+
+			[leader _group, "Heads up, paratroopers are being sent to your location"] call END_fnc_enemyChat;
+
+			EnemyPoints = EnemyPoints - 5;
+			
+			_deltaTime = _baseIdleTime;
+			sleep _baseIdleTime;
 			continue;
 		};
 
 
-		// make it a separate thread so that if something broke once, ai will still try to do something next time
-		[] spawn {
-			// I dunno how that can happen, if enemy found players they also add a spotted position,
-			// and after clearing it they add Escape Heli as spotted position in END_fnc_attack,
-			// but it happened to me once
-			if (count SpottedPositions == 0) then {
-				SpottedPositions pushBack (position EscapeHeli);
+		// spawn a heli when possible
+		if (EnemyPoints > 10 && ActiveHelis < HelisLimit) then {
+			_pos = [EnemySpawn] call END_fnc_findEnemyHeliSpawnPos;
+			_veh = createVehicle [selectRandom EnemyBattleHelis, _pos, [], 10, "FLY"];
+			_group = createVehicleCrew _veh;
+			[_group] call END_fnc_addGroupToOverwatch;
+			[_group, "heli"] call END_fnc_setEnemyGroupType;
+			[units _group, 4] call END_fnc_setUnitsValue;
+			[_group, selectRandom SpottedPositions] call END_fnc_attack;
+
+			[leader _group, "To all squads, we're flying over to your location, over."] call END_fnc_enemyChat;
+
+			EnemyPoints = EnemyPoints - 10;
+			
+			_deltaTime = _baseIdleTime;
+			sleep _baseIdleTime;
+			continue;
+		};
+
+
+		// spawn a vehicle when possible
+		if (EnemyPoints > 8 && ActiveVehicles < VehiclesLimit) then {
+			_possible_destinations = SpottedPositions select { count (_x nearRoads 100) > 0 };
+			if (Debug) then {
+				hint ("vehicle possible destinations " + str _possible_destinations);
 			};
-
-
-			// mortar fire
-			if ((random 70) < (50 min (Threat - 1)) && EnemyPoints > 3 && MortarAvailable) then {
-				_targets = [];
-				{
-					_targets append (_x targets [true, 200]);
-				} forEach (units east);
-				_targets = _targets select { _x distance2D (position (leader MortarGroup)) < 1000 };
-				if (count _targets > 0) then {
-					_fire_pos = position (selectRandom _targets);
-					[MortarGroup, _fire_pos, 5] call END_fnc_artilleryFire;
-
-					_text = format ["Incoming shells at %1, %2", (_fire_pos call BIS_fnc_PosToGrid)];
-					[leader MortarGroup, [EnemyRadioId, _text]] remoteExec ["customChat", -12];
-				};
-
-				EnemyPoints = EnemyPoints - 3;
-			};
-
-			// paratroopers
-			if (random 1 > 0.8 && TransportHeliAvailable && EnemyPoints > 5 && count SpottedPositions > 0) then {
-				_destination = selectRandom SpottedPositions;
-				_start = [EnemySpawn] call END_fnc_findEnemyHeliSpawnPos;
-				_group = [
-					EnemyChuteHeliClass,
-					EnemyParatroopers,
-					_start,
-					_destination
-				] call END_fnc_spawnEnemyParatroopers;
-				[units _group, 1] call END_fnc_setUnitsValue;
-
-				[leader _group, [EnemyRadioId, "Heads up, paratroopers are being sent to your location"]]  remoteExec ["customChat", -12];
-
-				EnemyPoints = EnemyPoints - 5;
-			};
-
-
-			// spawn a heli when possible
-			if (EnemyPoints > 10 && ActiveHelis < HelisLimit) then {
-				_pos = [EnemySpawn] call END_fnc_findEnemyHeliSpawnPos;
-				_veh = createVehicle [selectRandom EnemyBattleHelis, _pos, [], 10, "FLY"];
+			if (count _possible_destinations > 0) then {
+				_destination = selectRandom _possible_destinations;
+				_pos = [EnemySpawn, position player] call END_fnc_findEnemyVehicleSpawnPos;
+				_veh = createVehicle [selectRandom EnemyVehicles, _pos, [], 1, "NONE"];
 				_group = createVehicleCrew _veh;
-				[_group] call END_fnc_addGroupToOverwatch;
-				[_group, "heli"] call END_fnc_setEnemyGroupType;
-				[units _group, 4] call END_fnc_setUnitsValue;
-				[_group, selectRandom SpottedPositions] call END_fnc_attack;
-
-				[leader _group, [EnemyRadioId, "To all squads, we're flying over to your location, over."]] remoteExec ["customChat", -12];
-
-				EnemyPoints = EnemyPoints - 10;
-			};
-
-
-			// spawn a vehicle when possible
-			if (EnemyPoints > 8 && ActiveVehicles < VehiclesLimit) then {
-				_possible_destinations = SpottedPositions select { count (_x nearRoads 100) > 0 };
-				if (Debug) then {
-					hint ("vehicle possible destinations " + str _possible_destinations);
-				};
-				if (count _possible_destinations > 0) then {
-					_destination = selectRandom _possible_destinations;
-					_pos = [EnemySpawn, position player] call END_fnc_findEnemyVehicleSpawnPos;
-					_veh = createVehicle [selectRandom EnemyVehicles, _pos, [], 1, "NONE"];
-					_group = createVehicleCrew _veh;
-
-					[_group] call END_fnc_addGroupToOverwatch;
-					[_group, "vehicle"] call END_fnc_setEnemyGroupType;
-					[units _group, 3] call END_fnc_setUnitsValue;
-					[_group, _destination] call END_fnc_attack;
-
-					Threat = 2 max (Threat - 4 / DifficultyParam);
-					EnemyPoints = EnemyPoints - 8;
-				};
-			};
-
-
-			while { random 1 > 0.2 && EnemyPoints > 5 && ActiveHeavySquads < HeavySquadLimit } do {
-				_start = [EnemySpawn] call END_fnc_findEnemySpawnPos;
-				_destination = selectRandom SpottedPositions;
-				_group = [_start, selectRandom HeavySquads, east] call END_fnc_spawnSquad;
 
 				[_group] call END_fnc_addGroupToOverwatch;
-				[_group, "heavy"] call END_fnc_setEnemyGroupType;
-				[units _group, 2] call END_fnc_setUnitsValue;
-				[_group, _destination] call END_fnc_attack;
-
-				Threat = 2 max (Threat - 8 / DifficultyParam);
-				EnemyPoints = EnemyPoints - 5;
-			};
-			while { random 1 > 0.3 && EnemyPoints > 3 && ActiveLightSquads < LightSquadLimit } do {
-				_start = [EnemySpawn] call END_fnc_findEnemySpawnPos;
-				_destination = selectRandom SpottedPositions;
-				_group = [_start, selectRandom LightSquads, east] call END_fnc_spawnSquad;
-
-				[_group] call END_fnc_addGroupToOverwatch;
-				[_group, "light"] call END_fnc_setEnemyGroupType;
-				[units _group, 2] call END_fnc_setUnitsValue;
+				[_group, "vehicle"] call END_fnc_setEnemyGroupType;
+				[units _group, 3] call END_fnc_setUnitsValue;
 				[_group, _destination] call END_fnc_attack;
 
 				Threat = 2 max (Threat - 4 / DifficultyParam);
-				EnemyPoints = EnemyPoints - 3;
+				EnemyPoints = EnemyPoints - 8;
+				
+				_deltaTime = _baseIdleTime;
+				sleep _baseIdleTime;
+				continue;
 			};
 		};
 
-		sleep 60;
+
+		if (random 1 > 0.2 && EnemyPoints > 5 && ActiveHeavySquads < HeavySquadLimit) then {
+			_start = [EnemySpawn] call END_fnc_findEnemySpawnPos;
+			_destination = selectRandom SpottedPositions;
+			_group = [_start, selectRandom HeavySquads, east] call END_fnc_spawnSquad;
+
+			[_group] call END_fnc_addGroupToOverwatch;
+			[_group, "heavy"] call END_fnc_setEnemyGroupType;
+			[units _group, 2] call END_fnc_setUnitsValue;
+			[_group, _destination] call END_fnc_attack;
+
+			_grid = _destination call BIS_fnc_PosToGrid;
+			_text = format [
+				"We're moving out to %1, %2, over.", _grid select 0, _grid select 1
+			];
+			[leader _group, _text] call END_fnc_enemyChat;
+
+			Threat = 2 max (Threat - 8 / DifficultyParam);
+			EnemyPoints = EnemyPoints - 5;
+
+			_deltaTime = _baseIdleTime;
+			sleep _baseIdleTime;
+			continue;
+		};
+		if (random 1 > 0.3 && EnemyPoints > 3 && ActiveLightSquads < LightSquadLimit) then {
+			_start = [EnemySpawn] call END_fnc_findEnemySpawnPos;
+			_destination = selectRandom SpottedPositions;
+			_group = [_start, selectRandom LightSquads, east] call END_fnc_spawnSquad;
+
+			[_group] call END_fnc_addGroupToOverwatch;
+			[_group, "light"] call END_fnc_setEnemyGroupType;
+			[units _group, 2] call END_fnc_setUnitsValue;
+			[_group, _destination] call END_fnc_attack;
+
+			_grid = _destination call BIS_fnc_PosToGrid;
+			_text = format [
+				"We're moving out to %1, %2, over.", _grid select 0, _grid select 1
+			];
+			[leader _group, _text] call END_fnc_enemyChat;
+
+			Threat = 2 max (Threat - 4 / DifficultyParam);
+			EnemyPoints = EnemyPoints - 3;
+
+			_deltaTime = _baseIdleTime;
+			sleep _baseIdleTime;
+			continue;
+		};
+
+		_deltaTime = _baseIdleTime;
+		sleep _baseIdleTime;
 	};
 };
 
