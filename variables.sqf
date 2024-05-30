@@ -28,4 +28,4 @@ MortarAvailable = true;
 TransportHeliAvailable = true;
 
 RadioFound = false;
-EnemyRadioId = radioChannelCreate [[0.8, 0, 0, 1], "OPFOR", "%UNIT_GRP_NAME"];
+EnemyRadioId = radioChannelCreate [[0.8, 0, 0, 1], "OPFOR", "%UNIT_GRP_NAME", []];
