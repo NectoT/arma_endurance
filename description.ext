@@ -16,7 +16,7 @@ class Params {
 	class waiting_time
 	{
 		title = "Drone waiting time";
-		texts[] = { "10 minutes", "15 minutes", "20 minutes", "30 minutes" };
+		texts[] = { "5 minutes", "10 minutes", "15 minutes", "20 minutes", "30 minutes" };
 		values[] = { 5, 10, 15, 20, 30 };
 		default = 10;
 	};
