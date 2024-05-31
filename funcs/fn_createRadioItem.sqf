@@ -10,15 +10,6 @@ _icon = "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_search_ca.paa";
 	RadioFound = true;
 
 	EnemyRadioId radioChannelAdd (units west);
-	[
-		west,
-		"radio_found",
-		["Get the radio to intercept enemy comms", "Find a two-way enemy radio", ""],
-		objNull,
-		"SUCCEEDED",
-		1,
-		true,
-		"radio"
-	] remoteExec ["BIS_fnc_taskCreate", -12];
+	["task_radio_found", "SUCCEEDED"] remoteExec ["BIS_fnc_taskSetState", -12];
 	deleteVehicle _target;
 }, {}, [], 1] call BIS_fnc_holdActionAdd;

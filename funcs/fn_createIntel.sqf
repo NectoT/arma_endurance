@@ -5,22 +5,6 @@ _icon = "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_search_ca.paa";
 [_intel, "Pick up intel", _icon, _icon, "true", "true", {}, {}, {
 	params ["_target", "_caller", "_actionId", "_arguments"];
 
-	if (!MortarFound && !FirstAAIntelFound) then {
-		[
-			west,
-			"aa_intel",
-			[
-				"It seems that some enemy soldiers carry valuable intel with them", \
-				"Find more anti-air positions", ""
-			],
-			objNull,
-			"CREATED",
-			1,
-			true,
-			"intel"
-		] remoteExec ["BIS_fnc_taskCreate", -12];
-	};
-
 	if (!MortarFound && random 1 > 0.5) exitWith {
 		MortarFound = true;
 

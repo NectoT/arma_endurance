@@ -154,6 +154,33 @@ _squad_names = ["Bravo 1-1", "Bravo 1-2", "Charlie 1-1", "Charlie 1-2"];
 	[west, "task_wait", ["Wait until the drone arrives", "Wait", ""], objNull, "ASSIGNED", 1, true, "wait"] remoteExec ["BIS_fnc_taskCreate", -12];
 	["task_wait","wait"] remoteExec ["BIS_fnc_taskSetType", -12];
 
+	// create helper tasks
+	sleep 1;
+	[
+		west,
+		"task_radio_found",
+		["Enemy troops should have radios with them. If you find one you should be able to intercept enemy comms.", "Find a two-way enemy radio", ""],
+		objNull,
+		"CREATED",
+		-1,
+		false,
+		"radio"
+	] remoteExec ["BIS_fnc_taskCreate", -12];
+
+	[
+		west,
+		"aa_intel",
+		[
+			"There is a lot of anti-air around this area. Perhaps some enemies carry some information about it's whereabouts.", \
+			"Find more anti-air positions", ""
+		],
+		objNull,
+		"CREATED",
+		-1,
+		false,
+		"intel"
+	] remoteExec ["BIS_fnc_taskCreate", -12];
+
 
 	// send drone after some time
 	sleep ((["waiting_time", 1] call BIS_fnc_getParamValue) * 60);
