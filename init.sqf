@@ -231,7 +231,7 @@ _squad_names = ["Bravo 1-1", "Bravo 1-2", "Charlie 1-1", "Charlie 1-2"];
 	// Tell the players to get other squads
 	if (FriendlySquadsNum > 0) then {
 		["radio_in"] remoteExec ["playSound", -12];
-		[[west, "BLU"], "Alpha 1-1, we need you to evacuate all squads close to you first."] remoteExec ["sideChat", -12];
+		[[west, "BLU"], "Alpha 1-1, we need you to evacuate all nearby squads."] remoteExec ["sideChat", -12];
 		sleep 3;
 		[[west, "BLU"],  format [
 			"We've contacted %1 groups and ordered them to wait for your transport.",
@@ -245,8 +245,8 @@ _squad_names = ["Bravo 1-1", "Bravo 1-2", "Charlie 1-1", "Charlie 1-2"];
 			// create a task for every friendly group still alive
 			[
 				west,
-				"task_help_" + (groupId _x),
-				["Transport this squad to safety", "Extract " + (groupId _x), ""],
+				"task_pickup_" + (groupId _x),
+				["Transport this squad to safety.", "Pick up " + (groupId _x), ""],
 				position (leader _x),
 				"ASSIGNED",
 				1,
@@ -259,15 +259,18 @@ _squad_names = ["Bravo 1-1", "Bravo 1-2", "Charlie 1-1", "Charlie 1-2"];
 			_wp setWaypointType "HOLD";
 			_x setCurrentWaypoint _wp;
 
-			// add them to players group when they need to be picked up and leave the group when
-			// they arrive
-			[_x, _evac_radius] spawn {
-				params ["_group", "_evac_radius"];
+			// add them to players group when they need to be picked up
+			[_x] spawn {
+				params ["_group"];
+				
 				waitUntil {
 					sleep 1;
-					(leader _group) distance EscapeHeli < 100 && (isTouchingGround EscapeHeli) && count (crew EscapeHeli) > 0;
+					(
+						(leader _group) distance EscapeHeli < 100 && 
+						(isTouchingGround EscapeHeli) && count (crew EscapeHeli) > 0
+					);
 				};
-				_taskname = "task_help_" + (groupId _group);
+				_taskname = "task_pickup_" + (groupId _group);
 				_heli_group = group (crew EscapeHeli select 0);
 
 				// tell that the group is empty cause it joined players
@@ -277,29 +280,44 @@ _squad_names = ["Bravo 1-1", "Bravo 1-2", "Charlie 1-1", "Charlie 1-2"];
 
 				sleep 0.1;
 				deleteGroup _group;
-				[_taskname,EvacPos] remoteExec ["BIS_fnc_taskSetDestination", -12];
-
-
-				waitUntil {
-					sleep 1;
-					_units_far = false;
-					_in_vehicle = false;
-					{
-						_units_far = (_x distance EvacPos) > _evac_radius;
-						_in_vehicle = vehicle _x != _x;
-						if (_units_far || _in_vehicle) exitWith {};
-					} forEach _units;
-					if (!_units_far) then {
-						["Units can be dropped off here"] remoteExec ["hint", -12];
-					};
-					!_units_far && !_in_vehicle && (isTouchingGround EscapeHeli);
-				};
-				_units join grpNull;
 				[_taskname, "SUCCEEDED"] remoteExec ["BIS_fnc_taskSetState", -12];
-			}
+
+				if (!(['task_evac_friendlies'] call BIS_fnc_taskExists)) then {
+					// create task to evac friendlies
+					[
+						west,
+						"task_evac_friendlies",
+						[
+							"Transport all squads to evac position, marked by blue circle on the map", 
+							"Extract squads", 
+							""
+						],
+						EvacPos,
+						"ASSIGNED",
+						1,
+						true,
+						"land"
+					] remoteExec ["BIS_fnc_taskCreate", -12];
+				};
+			};
 		} forEach FriendlySquads;
 
-		waitUntil { FriendlySquadsNum == 0 };
+		// make ai units leave in a dropoff zone
+		_transportedGroup = createGroup west;
+		while { count FriendlySquads != 0 || west countSide allPlayers != count units PlayerGroup } do {
+			{
+				if (!(isPlayer _x) && (_x distance EvacPos) < _evac_radius && vehicle _x == _x) then {
+					if (count units _transportedGroup == 12) then {
+						_transportedGroup = createGroup west;
+					};
+					[_x] join _transportedGroup;
+				};
+			} forEach (units PlayerGroup);
+
+			sleep 2;
+		};
+
+		["task_evac_friendlies", "SUCCEEDED"] remoteExec ["BIS_fnc_taskSetState", -12];
 	};
 
 
@@ -329,9 +347,11 @@ _squad_names = ["Bravo 1-1", "Bravo 1-2", "Charlie 1-1", "Charlie 1-2"];
 		} forEach playableUnits;
 		!_units_far && (isTouchingGround EscapeHeli);
 	};
+
+	//// MISSION END
 	["task_getout", "SUCCEEDED"] remoteExec ["BIS_fnc_taskSetState", -12];
 	["END1", true] remoteExec ["BIS_fnc_endMission", -12];
-
+	////
 };
 
 
