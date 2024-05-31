@@ -19,7 +19,7 @@ _wp setWaypointType "SAD";
 		if (count SpottedPositions == 0) then {
 			SpottedPositions pushback (position EscapeHeli);
 		};
-		_next_stop = selectRandom SpottedPostions;
+		_next_stop = selectRandom SpottedPositions;
 		[group this, _next_stop] call END_fnc_attack;
 	"];
 };
